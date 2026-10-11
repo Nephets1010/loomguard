@@ -73,7 +73,7 @@
     <assertj.version>3.27.3</assertj.version>
     <spotless.version>2.44.4</spotless.version>
     <google-java-format.version>1.25.2</google-java-format.version>
-    <jacoco.version>0.8.13</jacoco.version>
+    <jacoco.version>0.8.15</jacoco.version>
 
     <!-- ==== 覆盖率门禁 ==== -->
     <!--
