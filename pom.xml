@@ -70,7 +70,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <assertj.version>3.27.3</assertj.version>
+    <assertj.version>3.27.7</assertj.version>
     <spotless.version>2.44.4</spotless.version>
     <google-java-format.version>1.25.2</google-java-format.version>
     <jacoco.version>0.8.13</jacoco.version>
