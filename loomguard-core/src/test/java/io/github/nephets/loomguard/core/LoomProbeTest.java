@@ -1,0 +1,79 @@
+/*
+ * Copyright 2026 The loomguard Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.github.nephets.loomguard.core;
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+/** LoomProbe 观测门面。 */
+class LoomProbeTest {
+
+    private final LoomProbe probe = new LoomProbe();
+
+    @Test
+    void successfulTaskReportsSuccess() {
+        TaskObservation obs =
+                probe.observe(
+                        TaskSpec.plain("ok"),
+                        () -> {
+                            try {
+                                Thread.sleep(10);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        });
+        assertThat(obs.succeeded()).isTrue();
+        assertThat(obs.failureMessage()).isNull();
+        assertThat(obs.wallTimeMillis()).isGreaterThanOrEqualTo(0);
+    }
+
+    @Test
+    void failingTaskReportsFailure() {
+        TaskObservation obs =
+                probe.observe(
+                        TaskSpec.plain("fail"),
+                        () -> {
+                            throw new IllegalStateException("boom");
+                        });
+        assertThat(obs.succeeded()).isFalse();
+        assertThat(obs.failureMessage()).isNotNull();
+    }
+
+    @Test
+    void observeRejectsNullArguments() {
+        assertThatThrownBy(() -> probe.observe(null, () -> {}))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> probe.observe(TaskSpec.plain("x"), null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void plainTaskIsNotPinned() {
+        TaskObservation obs =
+                probe.observe(
+                        TaskSpec.plain("plain"),
+                        () -> {
+                            try {
+                                Thread.sleep(10);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        });
+        assertThat(obs.pinning().anyPinned()).isFalse();
+    }
+}
