@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2026 The loomguard Authors. Licensed under the Apache License, Version 2.0 (the "License"); see the
+  LICENSE file in the project root for the full license text.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.nephets</groupId>
+    <artifactId>loomguard</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>loomguard-contract</artifactId>
+  <name>loomguard-contract</name>
+  <description>loomguard 的公共契约：pinning 事件模型、判定结果枚举、阈值值对象与异常类型。零运行时依赖（连 SLF4J 都不引入），因此可以被 core / starter / 使用方共同引用而不引入任何传递依赖。</description>
+
+  <!--
+    ★ 本模块刻意「零依赖」：
+      - 不引 SLF4J：契约类型只表达数据，不表达「怎么记日志」。日志是调用方的决定。
+      - 不引 Spring / 任何三方库：契约必须能被任意框架栈的使用方直接依赖。
+      - 只依赖 JDK（java.time / java.util）。
+      这样 core 与 starter 之间只通过这一层纯类型对话，任何一方换实现都不会波及对方。
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/package-info.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <properties>
+    <!--
+      契约模块的覆盖率要求与 core 一致（≥ 75%）：这些类型是全库的公共 API，
+      一旦 equals/hashCode/toString 或 null 拒绝语义退化，影响面比 core 内部实现更大，
+      所以门禁不能比 core 松。
+    -->
+    <jacoco.line.minimum>${jacoco.line.minimum.core}</jacoco.line.minimum>
+    <jacoco.report.skip>false</jacoco.report.skip>
+  </properties>
+</project>

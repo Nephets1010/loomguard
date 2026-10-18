@@ -1,0 +1,15 @@
+loomguard:
+  enabled: true
+  expose-endpoint: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,loomguard
+  endpoint:
+    health:
+      show-details: never
+
+server:
+  port: 8080

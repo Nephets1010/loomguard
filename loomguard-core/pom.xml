@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2026 The loomguard Authors. Licensed under the Apache License, Version 2.0 (the "License"); see the
+  LICENSE file in the project root for the full license text.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.nephets</groupId>
+    <artifactId>loomguard</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>loomguard-core</artifactId>
+  <name>loomguard-core</name>
+  <description>纯 Java 核心：pinning 探针（JFR jdk.VirtualThreadPinned）、ThreadLocal 内存审计、虚拟线程误用规则引擎。零 Spring 依赖，仅靠 JDK 21 的 jdk.jfr。</description>
+
+  <!--
+    ★ 本模块严禁引入任何 org.springframework.* 依赖。
+      CI 的 architecture-boundaries job 用 dependency:list 扫描编译期依赖，出现 org.springframework.* 即失败。
+  -->
+  <dependencies>
+    <!--
+      契约模块：所有对外可见的类型（PinningEvent / Finding / Severity / 阈值 …）都住在
+      loomguard-contract，core 只保留「怎么探测、怎么判定」的实现。
+    -->
+    <dependency>
+      <groupId>io.github.nephets</groupId>
+      <artifactId>loomguard-contract</artifactId>
+    </dependency>
+
+    <!-- 纯 Java 核心模块不依赖 Spring，但需补上 SLF4J API 以支持可观测日志；版本由 Spring Boot 父 POM 管理 -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      ★ 仅测试期依赖：用「确定性的合成 JFR 录制」来测解析逻辑。
+      放在 test scope 是刻意的 —— 生产运行时 core 不该知道测试替身的存在，
+      CI 的 architecture-boundaries 用 -DincludeScope=compile 扫描，也不会把它算进来。
+    -->
+    <dependency>
+      <groupId>io.github.nephets</groupId>
+      <artifactId>loomguard-mock-jfr</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/package-info.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <properties>
+    <!-- core 覆盖率要求更高：≥ 75% -->
+    <jacoco.line.minimum>${jacoco.line.minimum.core}</jacoco.line.minimum>
+    <jacoco.report.skip>false</jacoco.report.skip>
+  </properties>
+</project>

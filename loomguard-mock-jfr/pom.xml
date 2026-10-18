@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2026 The loomguard Authors. Licensed under the Apache License, Version 2.0 (the "License"); see the
+  LICENSE file in the project root for the full license text.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.nephets</groupId>
+    <artifactId>loomguard</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>loomguard-mock-jfr</artifactId>
+  <name>loomguard-mock-jfr</name>
+  <description>可复现的合成 JFR 录制替身：用 jdk.jfr 在受控条件下写出「内容确定」的 .jfr 文件（正常 / 空 / 损坏 / 截断 / 超长栈 / 缺字段），让 core 的解析测试不再依赖真实 JVM 是否真的发生了 pinning。</description>
+
+  <!--
+    ★ 为什么单独成一个模块，而不是塞进 core 的 testFixtures：
+      1) 它是「发布给使用方」的能力：任何人想给自己的 CI 造一份确定性的 pinning 样本，
+         不该被迫拉 core 的全部实现；
+      2) 它只依赖 JDK 的 jdk.jfr，不依赖 core —— 依赖方向是 core(test) → mock-jfr，
+         绝不能反过来，否则 reactor 里 core 与 mock-jfr 互相依赖会直接构不成拓扑序；
+      3) 单独成模块后，「合成录制能否被 RecordingFile 解析」这件事本身也有了自己的测试。
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/package-info.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <properties>
+    <!--
+      测试替身模块用默认门禁（≥ 60%）：它的代码路径里有一批「故意制造失败」
+      （损坏文件、截断文件、超大栈）的分支，逐个都测到会让测试变成在测 JDK 而不是测本库。
+    -->
+    <jacoco.report.skip>false</jacoco.report.skip>
+  </properties>
+</project>
